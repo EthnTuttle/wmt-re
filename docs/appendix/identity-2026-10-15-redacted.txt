@@ -1,0 +1,53 @@
+Captured 2026-10-15 from WhatsMiner M64_VL40 fw 20250409.15.REL via wmtcli identity
+(cmd 0x16 on 8889, proto 16). REDACTED: serials, MACs, pool users, wallet, names.
+
+STRUCTURE AS OBSERVED (important for docs):
+- Reply payload begins with "[MinerInfo]\n" and is ONE large INI-ish text with
+  \n-separated "Key = Value" lines (note spaces around '='), interleaved with
+  record separators of the form "#...#" (e.g. "#A0:53:00:00:00:00#" (MAC),
+  "#web_pool=1,sshd=0#", "#super=255 user1=0 user2=0 user3=0#").
+- After the [MinerInfo]/[PowerInfo] blocks come cgminer-style CSV sections:
+  "SUMMARY,...", "|EDEVS,...|ASC=0,...|ASC=1,...","|POOLS,...|POOL=1,URL=...",
+  "#Uptime=...,PowerRT=...,...".
+- NUL-separated "5 ordered fields" predicted from RE are NOT cleanly delimited
+  in this firmware's reply: wmtcli's parse_identity found field[0] = the entire
+  blob up to a late NUL; selection-relevant values must come from the Key=Value
+  lines (is_btrom = 0) and defaults (PlatformVersion absent -> v2). Do NOT
+  document the 5-field layout as confirmed; document the Key=Value reality.
+
+Key lines verbatim (redacted):
+[MinerInfo]
+MinerType = M64
+ControlBoardType = H616
+ControlBoardVersion = CB6V5
+HashBoardVersion = L40
+PowerType = P738B
+FirmwareVersion = 20250409.15.REL
+DetectedHashRate = -1:-1:-1:-1
+CoinType = BTC
+PoolStrategy = FAILOVER
+PowerMode = 1
+ChipData = H3VV08-24111317 BINVK3-000000A
+MinerApiSwitch = 1
+BtminerFastBoot = 0
+BoardNum = 4
+HashBoardStruct = 3044
+PcbSn0 = HLM40XF0000000X00000   (x4)
+PowerLimitSet = 1950
+is_btrom = 0
+MinerSn = HTM40X00RR00000000000000000X00000
+#A0:53:00:00:00:00#
+[PowerInfo]
+PowerName = P738B
+PowerRevision = 250315.250311_R00005
+PowerOnOff = on
+...
+#web_pool=1,sshd=0#
+#super=255 user1=0 user2=0 user3=0#
+SUMMARY,Factory Error Code 0=2310,...,Elapsed=113734,Uptime=115573,MHS av=59854788,...
+|EDEVS,Msg=4|ASC=0,Slot=0,...|ASC=1,...|ASC=2,...|ASC=3,...
+|POOLS,Msg=3 Pool(s)|POOL=1,URL=stratum+tcp://REDACTED,User=REDACTED,...|POOL=2,...
+#Uptime=115573,PowerRT=1812,...,EnvTemp=42.9,BoardNum=4,BoardTemp0=51.8,...
+
+Permission bitmap note: "super=255 user1=0 user2=0 user3=0" = super all-rights,
+sub-accounts none. Explains why user1:user1 on 8889 fails even at defaults.
